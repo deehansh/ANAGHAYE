@@ -11,13 +11,13 @@ One Platform. Endless Possibilities.
 - Browser utilities: word counter, case converter, text cleaner, text reverser, word frequency, percentage, age and BMI calculators, resume builder, SEO helper, caption helper and prompt builder
 
 ## Deploy on GitHub Pages
-1. Upload all files in this folder to the root of the `anaghaye-ai` repository.
+1. Upload all files in this folder to the root of the `ANAGHAYE` repository.
 2. Open repository **Settings → Pages**.
 3. Choose **Deploy from a branch**, select `main` and `/(root)`, then Save.
 4. Wait for GitHub Pages to publish the site.
 
 ## Backend
-The frontend is configured to use the deployed Cloudflare Worker at `https://ai-toolbox-api.ai-toolbox-deehansh.workers.dev`. The Worker currently supports `/health`, `/api/chat`, `/api/write`, `/api/translate`, `/api/summarize`, `/api/code`, and `/api/image`.
+The frontend is configured to use the deployed Cloudflare Worker at https://anaghaye-ai-api.anaghaye-ai.workers.dev. The Worker currently supports `/health`, `/api/chat`, `/api/write`, `/api/translate`, `/api/summarize`, `/api/code`, and `/api/image`.
 
 The backend has a shared daily quota of 20 requests per IP. Do not put private API keys in this public repository.
 
