@@ -1,30 +1,318 @@
 <!doctype html>
-<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="description" content="ANAGHAYE AI: an all-in-one platform for AI chat, image generation, writing, translation, coding, PDF assistance and productivity tools."><meta name="theme-color" content="#111827"><title>ANAGHAYE AI — One Platform, Endless Possibilities</title><link rel="stylesheet" href="styles.css"></head>
-<body><header class="top"><a class="logo" href="#home">✦ <b>ANAGHAYE AI</b></a><nav><a href="#tools">Tools</a><a href="#how">How it works</a><a href="privacy.html">Privacy</a></nav><button id="theme" class="ghost" aria-label="Toggle theme">☾</button></header>
-<main id="home"><section class="hero"><div class="eyebrow">ONE WORKSPACE · MANY POSSIBILITIES</div><h1>One platform.<br><span>Endless possibilities.</span></h1><p>Explore AI chat, image creation, writing, translation, coding and everyday productivity tools.</p><div class="search"><span>⌕</span><input id="search" placeholder="Search tools… e.g. PDF summarizer" aria-label="Search tools"></div><div class="hero-tags"><span>✓ Free browser tools</span><span>✓ No account for basic tools</span><span>✓ AI tools and browser utilities</span></div></section>
-<section class="stats"><div><b>20+</b><span>tools & assistants</span></div><div><b>8</b><span>tool categories</span></div><div><b>One</b><span>simple workspace</span></div></section>
-<section id="tools" class="section"><div class="section-head"><div><div class="eyebrow dark">TOOL LIBRARY</div><h2>What would you like to do?</h2><p>Choose a tool to open its workspace.</p></div><div class="filters"><button class="active" data-filter="all">All</button><button data-filter="ai">AI tools</button><button data-filter="create">Create</button><button data-filter="productivity">Productivity</button></div></div><div id="grid" class="grid">
-<button class="tile" data-id="chat" data-cat="ai" data-key="chat assistant ask questions brainstorm"><i>💬</i><small>AI ASSISTANT</small><b>AI Chat</b><span>Ask questions, brainstorm and get help.</span></button>
-<button class="tile" data-id="writer" data-cat="ai create" data-key="writer blog email social post rewrite"><i>✍️</i><small>AI CREATE</small><b>AI Writing Studio</b><span>Draft blogs, emails, captions and rewrite text.</span></button>
-<button class="tile" data-id="translator" data-cat="ai productivity" data-key="translate language hindi english"><i>🌐</i><small>AI LANGUAGE</small><b>Translator</b><span>Translate text between languages.</span></button>
-<button class="tile" data-id="pdf" data-cat="ai productivity" data-key="pdf summarize document reader"><i>📄</i><small>AI DOCUMENTS</small><b>PDF Assistant</b><span>Extract text and summarize a PDF.</span></button>
-<button class="tile" data-id="image" data-cat="ai create" data-key="image generator text to image art"><i>🎨</i><small>AI CREATE</small><b>AI Image Studio</b><span>Generate an image from a text prompt (backend required).</span></button>
-<button class="tile" data-id="video" data-cat="create" data-key="video generator script storyboard prompt"><i>🎬</i><small>VIDEO STUDIO</small><b>AI Video Studio</b><span>Create a video brief, storyboard and shot prompts.</span></button>
-<button class="tile" data-id="voice" data-cat="create productivity" data-key="voice text to speech speak aloud"><i>🔊</i><small>VOICE</small><b>Text to Speech</b><span>Read text aloud using your browser voice.</span></button>
-<button class="tile" data-id="code" data-cat="ai productivity" data-key="coding assistant html css javascript debug"><i>⌘</i><small>AI ASSISTANT</small><b>Coding Assistant</b><span>Explain, write and debug code with AI.</span></button>
-<button class="tile" data-id="word" data-cat="productivity" data-key="word counter characters sentences"><i>🔤</i><small>TEXT</small><b>Word Counter</b><span>Count words, characters and sentences.</span></button>
-<button class="tile" data-id="case" data-cat="productivity" data-key="case converter uppercase lowercase"><i>Aa</i><small>TEXT</small><b>Case Converter</b><span>Change text case instantly.</span></button>
-<button class="tile" data-id="clean" data-cat="productivity" data-key="text cleaner whitespace clean"><i>🧹</i><small>TEXT</small><b>Text Cleaner</b><span>Remove extra spaces and blank lines.</span></button>
-<button class="tile" data-id="reverse" data-cat="productivity" data-key="reverse text words"><i>⇄</i><small>TEXT</small><b>Text Reverser</b><span>Reverse characters or word order.</span></button>
-<button class="tile" data-id="frequency" data-cat="productivity" data-key="word frequency repeated words"><i>▤</i><small>TEXT</small><b>Word Frequency</b><span>Find the most repeated words.</span></button>
-<button class="tile" data-id="percentage" data-cat="productivity" data-key="percentage calculator percent"><i>％</i><small>CALCULATOR</small><b>Percentage Calculator</b><span>Calculate a percentage of a number.</span></button>
-<button class="tile" data-id="age" data-cat="productivity" data-key="age calculator date birth"><i>◷</i><small>CALCULATOR</small><b>Age Calculator</b><span>Calculate age from date of birth.</span></button>
-<button class="tile" data-id="bmi" data-cat="productivity" data-key="bmi calculator body mass index"><i>⚖</i><small>CALCULATOR</small><b>BMI Calculator</b><span>Calculate body mass index.</span></button>
-<button class="tile" data-id="resume" data-cat="create productivity" data-key="resume cv builder printable"><i>📋</i><small>CAREER</small><b>Resume Builder</b><span>Create a printable resume.</span></button>
-<button class="tile" data-id="seo" data-cat="create productivity" data-key="seo meta title description"><i>⌕</i><small>SEO</small><b>SEO Meta Helper</b><span>Draft and count SEO title and description.</span></button>
-<button class="tile" data-id="caption" data-cat="create" data-key="caption social instagram youtube"><i>#</i><small>CREATOR</small><b>Caption & Hashtag Helper</b><span>Build a caption brief and hashtag set.</span></button>
-<button class="tile" data-id="prompt" data-cat="create" data-key="prompt builder image video chatgpt"><i>✧</i><small>CREATOR</small><b>Prompt Builder</b><span>Structure prompts for image, video and chat tools.</span></button>
-</div><p id="empty" class="empty hidden">No matching tools. Try another search.</p></section>
-<section id="how" class="how"><div><div class="eyebrow dark">SIMPLE BY DESIGN</div><h2>Useful tools, without the clutter.</h2><p>Basic utilities run in your browser. AI-powered features connect to a private backend endpoint that you configure. Your secret API keys should never be placed in this public website.</p></div><div class="how-list"><p><b>01 · Choose</b><span>Open the tool you need.</span></p><p><b>02 · Add input</b><span>Type text or upload a document.</span></p><p><b>03 · Get results</b><span>Copy, download or use your output.</span></p></div></section>
-</main><footer><a class="logo" href="#home">✦ <b>ANAGHAYE AI</b></a><p>One platform. Endless possibilities.</p><div><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div><small>© <span id="year"></span> ANAGHAYE AI</small></footer>
-<div id="modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle"><div class="dialog"><div class="dialog-head"><div><small id="modalTag">TOOL</small><h2 id="modalTitle">Tool</h2></div><button id="close" class="close" aria-label="Close">×</button></div><div id="body"></div></div></div><div id="toast" class="toast" role="status"></div><script src="app.js"></script></body></html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="description" content="ANAGHAYE AI: an all-in-one platform for AI chat, image generation, writing, translation, coding, PDF assistance and productivity tools.">
+<meta name="theme-color" content="#111827">
+<title>ANAGHAYE AI — One Platform, Endless Possibilities</title>
+<link rel="stylesheet" href="styles.css">
+
+<style>
+#accountArea {
+  display: flex;
+  align-items: center;
+}
+
+#accountButton {
+  white-space: nowrap;
+}
+
+.cloud-chat-layout {
+  display: grid;
+  grid-template-columns: minmax(170px,230px) minmax(0,1fr);
+  gap: 16px;
+  align-items: start;
+}
+
+.chat-history {
+  border: 1px solid var(--line,#ddd);
+  border-radius: 12px;
+  padding: 10px;
+  max-height: 420px;
+  overflow: auto;
+}
+
+.chat-history-row {
+  display: flex;
+  gap: 5px;
+  align-items: center;
+  margin-top: 8px;
+  flex-wrap: wrap;
+}
+
+.chat-history-row button {
+  font-size: 12px;
+  padding: 7px 9px;
+}
+
+.chat-workspace {
+  min-width: 0;
+}
+
+#chatHistoryList {
+  margin-top: 8px;
+}
+
+#authBody .actions {
+  display: flex;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+#authBody .hint {
+  margin-top: 10px;
+}
+
+@media(max-width:700px) {
+  .cloud-chat-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .chat-history {
+    max-height: 180px;
+  }
+}
+</style>
+</head>
+
+<body>
+
+<header class="top">
+  <a class="logo" href="#home">✦ <b>ANAGHAYE AI</b></a>
+
+  <nav>
+    <a href="#tools">Tools</a>
+    <a href="#how">How it works</a>
+    <a href="privacy.html">Privacy</a>
+  </nav>
+
+  <div id="accountArea">
+    <button id="accountButton" class="ghost">Login / Sign up</button>
+  </div>
+
+  <button id="theme" class="ghost" aria-label="Toggle theme">☾</button>
+</header>
+
+<main id="home">
+
+<section class="hero">
+  <div class="eyebrow">ONE WORKSPACE · MANY POSSIBILITIES</div>
+
+  <h1>One platform.<br><span>Endless possibilities.</span></h1>
+
+  <p>Explore AI chat, image creation, writing, translation, coding and everyday productivity tools.</p>
+
+  <div class="search">
+    <span>⌕</span>
+    <input id="search" placeholder="Search tools… e.g. PDF summarizer" aria-label="Search tools">
+  </div>
+
+  <div class="hero-tags">
+    <span>✓ Free browser tools</span>
+    <span>✓ No account for basic tools</span>
+    <span>✓ AI tools and browser utilities</span>
+  </div>
+</section>
+
+<section class="stats">
+  <div><b>20+</b><span>tools & assistants</span></div>
+  <div><b>8</b><span>tool categories</span></div>
+  <div><b>One</b><span>simple workspace</span></div>
+</section>
+
+<section id="tools" class="section">
+
+  <div class="section-head">
+    <div>
+      <div class="eyebrow dark">TOOL LIBRARY</div>
+      <h2>What would you like to do?</h2>
+      <p>Choose a tool to open its workspace.</p>
+    </div>
+
+    <div class="filters">
+      <button class="active" data-filter="all">All</button>
+      <button data-filter="ai">AI tools</button>
+      <button data-filter="create">Create</button>
+      <button data-filter="productivity">Productivity</button>
+    </div>
+  </div>
+
+  <div id="grid" class="grid">
+
+    <button class="tile" data-id="chat" data-cat="ai" data-key="chat assistant ask questions brainstorm">
+      <i>💬</i><small>AI ASSISTANT</small><b>AI Chat</b>
+      <span>Ask questions, brainstorm and get help.</span>
+    </button>
+
+    <button class="tile" data-id="writer" data-cat="ai create" data-key="writer blog email social post rewrite">
+      <i>✍️</i><small>AI CREATE</small><b>AI Writing Studio</b>
+      <span>Draft blogs, emails, captions and rewrite text.</span>
+    </button>
+
+    <button class="tile" data-id="translator" data-cat="ai productivity" data-key="translate language hindi english">
+      <i>🌐</i><small>AI LANGUAGE</small><b>Translator</b>
+      <span>Translate text between languages.</span>
+    </button>
+
+    <button class="tile" data-id="pdf" data-cat="ai productivity" data-key="pdf summarize document reader">
+      <i>📄</i><small>AI DOCUMENTS</small><b>PDF Assistant</b>
+      <span>Extract text and summarize a PDF.</span>
+    </button>
+
+    <button class="tile" data-id="image" data-cat="ai create" data-key="image generator text to image art">
+      <i>🎨</i><small>AI CREATE</small><b>AI Image Studio</b>
+      <span>Generate an image from a text prompt (backend required).</span>
+    </button>
+
+    <button class="tile" data-id="video" data-cat="create" data-key="video generator script storyboard prompt">
+      <i>🎬</i><small>VIDEO STUDIO</small><b>AI Video Studio</b>
+      <span>Create a video brief, storyboard and shot prompts.</span>
+    </button>
+
+    <button class="tile" data-id="voice" data-cat="create productivity" data-key="voice text to speech speak aloud">
+      <i>🔊</i><small>VOICE</small><b>Text to Speech</b>
+      <span>Read text aloud using your browser voice.</span>
+    </button>
+
+    <button class="tile" data-id="code" data-cat="ai productivity" data-key="coding assistant html css javascript debug">
+      <i>⌘</i><small>AI ASSISTANT</small><b>Coding Assistant</b>
+      <span>Explain, write and debug code with AI.</span>
+    </button>
+
+    <button class="tile" data-id="word" data-cat="productivity" data-key="word counter characters sentences">
+      <i>🔤</i><small>TEXT</small><b>Word Counter</b>
+      <span>Count words, characters and sentences.</span>
+    </button>
+
+    <button class="tile" data-id="case" data-cat="productivity" data-key="case converter uppercase lowercase">
+      <i>Aa</i><small>TEXT</small><b>Case Converter</b>
+      <span>Change text case instantly.</span>
+    </button>
+
+    <button class="tile" data-id="clean" data-cat="productivity" data-key="text cleaner whitespace clean">
+      <i>🧹</i><small>TEXT</small><b>Text Cleaner</b>
+      <span>Remove extra spaces and blank lines.</span>
+    </button>
+
+    <button class="tile" data-id="reverse" data-cat="productivity" data-key="reverse text words">
+      <i>⇄</i><small>TEXT</small><b>Text Reverser</b>
+      <span>Reverse characters or word order.</span>
+    </button>
+
+    <button class="tile" data-id="frequency" data-cat="productivity" data-key="word frequency repeated words">
+      <i>▤</i><small>TEXT</small><b>Word Frequency</b>
+      <span>Find the most repeated words.</span>
+    </button>
+
+    <button class="tile" data-id="percentage" data-cat="productivity" data-key="percentage calculator percent">
+      <i>％</i><small>CALCULATOR</small><b>Percentage Calculator</b>
+      <span>Calculate a percentage of a number.</span>
+    </button>
+
+    <button class="tile" data-id="age" data-cat="productivity" data-key="age calculator date birth">
+      <i>◷</i><small>CALCULATOR</small><b>Age Calculator</b>
+      <span>Calculate age from date of birth.</span>
+    </button>
+
+    <button class="tile" data-id="bmi" data-cat="productivity" data-key="bmi calculator body mass index">
+      <i>⚖</i><small>CALCULATOR</small><b>BMI Calculator</b>
+      <span>Calculate body mass index.</span>
+    </button>
+
+    <button class="tile" data-id="resume" data-cat="create productivity" data-key="resume cv builder printable">
+      <i>📋</i><small>CAREER</small><b>Resume Builder</b>
+      <span>Create a printable resume.</span>
+    </button>
+
+    <button class="tile" data-id="seo" data-cat="create productivity" data-key="seo meta title description">
+      <i>⌕</i><small>SEO</small><b>SEO Meta Helper</b>
+      <span>Draft and count SEO title and description.</span>
+    </button>
+
+    <button class="tile" data-id="caption" data-cat="create" data-key="caption social instagram youtube">
+      <i>#</i><small>CREATOR</small><b>Caption & Hashtag Helper</b>
+      <span>Build a caption brief and hashtag set.</span>
+    </button>
+
+    <button class="tile" data-id="prompt" data-cat="create" data-key="prompt builder image video chatgpt">
+      <i>✧</i><small>CREATOR</small><b>Prompt Builder</b>
+      <span>Structure prompts for image, video and chat tools.</span>
+    </button>
+
+  </div>
+
+  <p id="empty" class="empty hidden">No matching tools. Try another search.</p>
+
+</section>
+
+<section id="how" class="how">
+  <div>
+    <div class="eyebrow dark">SIMPLE BY DESIGN</div>
+    <h2>Useful tools, without the clutter.</h2>
+    <p>Basic utilities run in your browser. AI-powered features connect to a private backend endpoint that you configure. Your secret API keys should never be placed in this public website.</p>
+  </div>
+
+  <div class="how-list">
+    <p><b>01 · Choose</b><span>Open the tool you need.</span></p>
+    <p><b>02 · Add input</b><span>Type text or upload a document.</span></p>
+    <p><b>03 · Get results</b><span>Copy, download or use your output.</span></p>
+  </div>
+</section>
+
+</main>
+
+<footer>
+  <a class="logo" href="#home">✦ <b>ANAGHAYE AI</b></a>
+  <p>One platform. Endless possibilities.</p>
+
+  <div>
+    <a href="privacy.html">Privacy</a>
+    <a href="terms.html">Terms</a>
+  </div>
+
+  <small>© <span id="year"></span> ANAGHAYE AI</small>
+</footer>
+
+<!-- ACCOUNT LOGIN / SIGNUP MODAL -->
+<div id="authModal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="authTitle">
+  <div class="dialog">
+
+    <div class="dialog-head">
+      <div>
+        <small>ANAGHAYE AI ACCOUNT</small>
+        <h2 id="authTitle">Welcome</h2>
+      </div>
+
+      <button id="authClose" class="close" aria-label="Close">×</button>
+    </div>
+
+    <div id="authBody"></div>
+
+  </div>
+</div>
+
+<!-- EXISTING TOOL MODAL -->
+<div id="modal" class="overlay hidden" role="dialog" aria-modal="true" aria-labelledby="modalTitle">
+  <div class="dialog">
+
+    <div class="dialog-head">
+      <div>
+        <small id="modalTag">TOOL</small>
+        <h2 id="modalTitle">Tool</h2>
+      </div>
+
+      <button id="close" class="close" aria-label="Close">×</button>
+    </div>
+
+    <div id="body"></div>
+
+  </div>
+</div>
+
+<div id="toast" class="toast" role="status"></div>
+
+<script src="app.js"></script>
+
+</body>
+</html>
