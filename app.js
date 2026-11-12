@@ -1,4 +1,3 @@
-
 const $ = s => document.querySelector(s);
 const modal = $('#modal');
 const body = $('#body');
@@ -7,6 +6,256 @@ let filter = 'all';
 $('#year').textContent = new Date().getFullYear();
 
 const API_BASE = 'https://anaghaye-ai-api.anaghaye-ai.workers.dev';
+
+const AUTH_TOKEN_KEY = 'anaghaye_ai_session';
+let authToken = localStorage.getItem(AUTH_TOKEN_KEY) || '';
+let currentUser = null;
+let cloudConversations = [];
+let activeConversationId = null;
+let activeConversationTool = null;
+
+async function authRequest(path, method = 'GET', payload = null) {
+  const headers = {};
+  if (authToken) headers.Authorization = `Bearer ${authToken}`;
+  if (payload) headers['Content-Type'] = 'application/json';
+  const response = await fetch(`${API_BASE}/api/auth/${path}`, {
+    method, headers, ...(payload ? { body: JSON.stringify(payload) } : {})
+  });
+  let data = {};
+  try { data = await response.json(); } catch {}
+  if (!response.ok) throw new Error(data.error || `Authentication failed (${response.status})`);
+  return data;
+}
+
+async function conversationRequest(path, method = 'GET', payload = null) {
+  if (!authToken) throw new Error('Please log in to use cloud chat history.');
+  const headers = { Authorization: `Bearer ${authToken}` };
+  if (payload) headers['Content-Type'] = 'application/json';
+  const response = await fetch(`${API_BASE}/api/conversations${path}`, {
+    method, headers, ...(payload ? { body: JSON.stringify(payload) } : {})
+  });
+  let data = {};
+  try { data = await response.json(); } catch {}
+  if (!response.ok) throw new Error(data.error || `Request failed (${response.status})`);
+  return data;
+}
+
+function updateAccountButton() {
+  const area = $('#accountArea');
+  if (!area) return;
+  area.innerHTML = currentUser
+    ? `<button id="accountButton" class="ghost" title="Account">${escapeHtml(currentUser.email || 'My account')}</button>`
+    : '<button id="accountButton" class="ghost">Login / Sign up</button>';
+  $('#accountButton').onclick = () => currentUser ? showAccountMenu() : showAuth('login');
+}
+
+function escapeHtml(value) {
+  return String(value).replace(/[&<>"']/g, ch => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[ch]));
+}
+
+function showAccountMenu() {
+  const choice = prompt(`Signed in as ${currentUser.email}\nType "logout" to sign out, or Cancel to close.`);
+  if (choice && choice.trim().toLowerCase() === 'logout') logout();
+}
+
+function showAuth(mode = 'login') {
+  const authModal = $('#authModal');
+  const authBody = $('#authBody');
+  $('#authTitle').textContent = mode === 'signup' ? 'Create your account' : 'Login to ANAGHAYE AI';
+  authBody.innerHTML = `
+    <div class="field"><label for="authEmail">Email address</label><input id="authEmail" type="email" autocomplete="email" placeholder="you@example.com" required></div>
+    <div class="field"><label for="authPassword">Password</label><input id="authPassword" type="password" autocomplete="${mode === 'signup' ? 'new-password' : 'current-password'}" placeholder="${mode === 'signup' ? 'At least 10 characters' : 'Your password'}" required></div>
+    ${mode === 'signup' ? '<p class="hint">Use at least 10 characters. Your account gets a unique User ID.</p>' : ''}
+    <div class="actions"><button id="authSubmit" class="primary">${mode === 'signup' ? 'Create account' : 'Login'}</button><button id="authSwitch" class="secondary">${mode === 'signup' ? 'I already have an account' : 'Create a new account'}</button></div>
+    <p id="authError" class="hint" aria-live="polite"></p>`;
+  authModal.classList.remove('hidden');
+  $('#authSwitch').onclick = () => showAuth(mode === 'signup' ? 'login' : 'signup');
+  $('#authSubmit').onclick = async () => {
+    const email = $('#authEmail').value.trim();
+    const password = $('#authPassword').value;
+    const error = $('#authError');
+    if (!email || !password) {
+      error.textContent = 'Enter your email and password.';
+      return;
+    }
+    const btn = $('#authSubmit');
+    btn.disabled = true;
+    error.textContent = 'Please wait…';
+    try {
+      const data = await authRequest(mode === 'signup' ? 'signup' : 'login', 'POST', { email, password });
+      if (!data.token) throw new Error('The server did not return a session token. Please check the Worker response.');
+      authToken = data.token;
+      localStorage.setItem(AUTH_TOKEN_KEY, authToken);
+      currentUser = data.user || { email };
+      if (!currentUser.email) currentUser.email = email;
+      authModal.classList.add('hidden');
+      updateAccountButton();
+      await loadCloudConversations();
+      toast(mode === 'signup' ? 'Account created successfully' : 'Logged in successfully');
+      if (pendingToolToOpen) {
+        const next = pendingToolToOpen;
+        pendingToolToOpen = null;
+        open(next);
+      }
+    } catch (e) {
+      error.textContent = e.message;
+    } finally {
+      btn.disabled = false;
+    }
+  };
+}
+
+let pendingToolToOpen = null;
+
+async function restoreSession() {
+  if (!authToken) {
+    updateAccountButton();
+    return;
+  }
+  try {
+    const data = await authRequest('me');
+    currentUser = data.user || data;
+    await loadCloudConversations();
+  } catch {
+    authToken = '';
+    currentUser = null;
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+  }
+  updateAccountButton();
+}
+
+async function logout() {
+  try {
+    await authRequest('logout', 'POST', {});
+  } catch {}
+  authToken = '';
+  currentUser = null;
+  cloudConversations = [];
+  activeConversationId = null;
+  localStorage.removeItem(AUTH_TOKEN_KEY);
+  updateAccountButton();
+  toast('You have been logged out');
+}
+
+async function loadCloudConversations() {
+  const data = await conversationRequest('');
+  cloudConversations = data.conversations || [];
+  renderCloudSidebar();
+}
+
+async function createCloudConversation() {
+  const data = await conversationRequest('', 'POST', { title: 'New Chat' });
+  activeConversationId = data.conversation.id;
+  await loadCloudConversations();
+  return activeConversationId;
+}
+
+async function loadCloudConversation(id) {
+  const data = await conversationRequest(`/${encodeURIComponent(id)}`);
+  activeConversationId = id;
+  renderCloudMessages(data.messages || []);
+  renderCloudSidebar();
+}
+
+function renderCloudMessages(messages) {
+  const out = $('#out');
+  if (!out) return;
+  out.textContent = messages.map(m =>
+    (m.role === 'user' ? 'You:\n' : 'ANAGHAYE AI:\n') + m.content
+  ).join('\n\n--------------------\n\n');
+}
+
+function renderCloudSidebar() {
+  const list = $('#chatHistoryList');
+  if (!list) return;
+  list.innerHTML = '';
+  cloudConversations.forEach(item => {
+    const row = document.createElement('div');
+    row.className = 'chat-history-row';
+
+    const select = document.createElement('button');
+    select.type = 'button';
+    select.className = 'secondary';
+    select.textContent = item.title || 'New Chat';
+    select.style.flex = '1';
+    select.onclick = async () => {
+      try {
+        await loadCloudConversation(item.id);
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+
+    const rename = document.createElement('button');
+    rename.type = 'button';
+    rename.className = 'ghost';
+    rename.textContent = 'Rename';
+    rename.onclick = async () => {
+      const title = prompt('Enter a new chat title:', item.title || 'New Chat');
+      if (!title || !title.trim()) return;
+      try {
+        await conversationRequest(`/${encodeURIComponent(item.id)}`, 'PATCH', { title: title.trim() });
+        await loadCloudConversations();
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+
+    const remove = document.createElement('button');
+    remove.type = 'button';
+    remove.className = 'ghost';
+    remove.textContent = 'Delete';
+    remove.onclick = async () => {
+      if (!confirm(`Delete "${item.title || 'New Chat'}"? This cannot be undone.`)) return;
+      try {
+        await conversationRequest(`/${encodeURIComponent(item.id)}`, 'DELETE');
+        if (activeConversationId === item.id) {
+          activeConversationId = null;
+          if ($('#out')) $('#out').textContent = '';
+        }
+        await loadCloudConversations();
+      } catch (e) {
+        toast(e.message);
+      }
+    };
+
+    row.append(select, rename, remove);
+    list.append(row);
+  });
+}
+
+async function ensureCloudChat(tool) {
+  if (!currentUser || !authToken) {
+    pendingToolToOpen = tool;
+    showAuth('login');
+    return false;
+  }
+  activeConversationTool = tool;
+  if (!activeConversationId || !cloudConversations.some(c => c.id === activeConversationId)) {
+    await createCloudConversation();
+  }
+  return true;
+}
+
+async function sendCloudMessage(tool, prompt, options = {}) {
+  if (!activeConversationId) await createCloudConversation();
+  const data = await conversationRequest(`/${encodeURIComponent(activeConversationId)}/ask`, 'POST', {
+    tool, prompt, tone: options.tone, format: options.format
+  });
+  await loadCloudConversations();
+  const history = await conversationRequest(`/${encodeURIComponent(activeConversationId)}`);
+  renderCloudMessages(history.messages || []);
+  return data.assistantMessage?.content || '';
+}
+
+$('#authClose').onclick = () => $('#authModal').classList.add('hidden');
+$('#authModal').addEventListener('click', e => {
+  if (e.target === $('#authModal')) $('#authModal').classList.add('hidden');
+});
+
+restoreSession();
 
 fetch(`${API_BASE}/health`)
   .then(r => r.json())
@@ -55,6 +304,12 @@ function toast(s) {
 }
 
 function open(id) {
+  if (['chat', 'writer', 'code'].includes(id) && (!currentUser || !authToken)) {
+    pendingToolToOpen = id;
+    showAuth('login');
+    return;
+  }
+
   const titles = {
     chat: 'AI Chat',
     writer: 'AI Writing Studio',
@@ -123,7 +378,6 @@ function area(label, id, placeholder = 'Enter text here…') {
 function actions(html) {
   return `<div class="actions">${html}</div>`;
 }
-
 function result(id = 'out') {
   return `<div class="result" id="${id}" aria-live="polite"></div>`;
 }
@@ -202,53 +456,67 @@ async function api(tool, prompt, messages = null) {
   return d.result || d.response || d.text || 'No result returned.';
 }
 
-function renderConversation(id) {
-  const history = conversationState[id];
+function cloudChatLayout(label, placeholder, tool, extraFields = '') {
+  if (activeConversationTool !== tool) activeConversationId = null;
+  activeConversationTool = tool;
 
-  $('#out').textContent = history.map(m =>
-    (m.role === 'user' ? 'You:\n' : 'ANAGHAYE AI:\n') + m.content
-  ).join('\n\n--------------------\n\n');
-}
-
-function getRecentMessages(id, newMessage) {
-  return [
-    ...conversationState[id].slice(-10),
-    { role: 'user', content: newMessage }
-  ];
-}
-
-function aiForm(id, label, placeholder, tool = id) {
   body.innerHTML =
-    area(label, 'input', placeholder) +
-    actions(
-      button('Send message', 'go') +
-      button('New Chat', 'newchat', 'secondary') +
-      button('Copy conversation', 'copy', 'secondary')
-    ) +
-    result() +
-    '<p class="hint">Continue asking questions. ANAGHAYE AI uses recent messages as conversation context. New Chat clears this conversation.</p>';
+    `<div class="cloud-chat-layout">
+      <aside class="chat-history">
+        <button id="cloudNewChat" class="primary">+ New Chat</button>
+        <div id="chatHistoryList"></div>
+      </aside>
+      <section class="chat-workspace">
+        ${extraFields}
+        ${area(label, 'input', placeholder)}
+        ${actions(button('Send message', 'go') + button('Copy conversation', 'copy', 'secondary'))}
+        ${result()}
+      </section>
+    </div>
+    <p class="hint">Your chats are saved to your account and sync when you log in on another device.</p>`;
 
-  renderConversation(id);
+  renderCloudSidebar();
+
+  if (activeConversationId && cloudConversations.some(c => c.id === activeConversationId)) {
+    loadCloudConversation(activeConversationId).catch(e => toast(e.message));
+  } else {
+    createCloudConversation().catch(e => toast(e.message));
+  }
+
+  $('#cloudNewChat').onclick = async () => {
+    try {
+      await createCloudConversation();
+      $('#out').textContent = '';
+      $('#input').value = '';
+      toast('New chat started');
+    } catch (e) {
+      toast(e.message);
+    }
+  };
 
   $('#go').onclick = async () => {
-    const v = $('#input').value.trim();
-    if (!v) return toast('Please enter some text');
+    const input = $('#input');
+    const value = input.value.trim();
+    if (!value) return toast('Please enter a message');
 
     const btn = $('#go');
     btn.disabled = true;
     btn.textContent = 'Thinking…';
 
     try {
-      const messages = getRecentMessages(id, v);
-      const answer = await api(tool, v, messages);
+      const prompt = extraFields && $('#kind')
+        ? `${$('#kind').value}\n${value}`
+        : value;
 
-      conversationState[id].push(
-        { role: 'user', content: v },
-        { role: 'assistant', content: answer }
-      );
+      const options = tool === 'write'
+        ? {
+            tone: 'clear and professional',
+            format: 'Follow the selected content type and user instructions.'
+          }
+        : {};
 
-      renderConversation(id);
-      $('#input').value = '';
+      await sendCloudMessage(tool, prompt, options);
+      input.value = '';
     } catch (e) {
       toast(e.message);
     } finally {
@@ -257,14 +525,11 @@ function aiForm(id, label, placeholder, tool = id) {
     }
   };
 
-  $('#newchat').onclick = () => {
-    conversationState[id] = [];
-    $('#out').textContent = '';
-    $('#input').value = '';
-    toast('New chat started');
-  };
-
   $('#copy').onclick = () => copyOut();
+}
+
+function aiForm(id, label, placeholder, tool = id) {
+  cloudChatLayout(label, placeholder, tool);
 }
 
 function chat() {
@@ -277,65 +542,24 @@ function chat() {
 }
 
 function writer() {
-  body.innerHTML =
-    `<div class="field">
-      <label>Content type</label>
-      <select id="kind">
-        <option>Blog post</option>
-        <option>Email</option>
-        <option>Social media caption</option>
-        <option>Product description</option>
-        <option>Rewrite and improve</option>
-        <option>Video script</option>
-      </select>
-    </div>` +
-    area('Topic and instructions', 'input', 'Describe your topic, audience, tone and key points…') +
-    actions(
-      button('Send message', 'go') +
-      button('New Chat', 'newchat', 'secondary') +
-      button('Copy conversation', 'copy', 'secondary')
-    ) +
-    result() +
-    '<p class="hint">Continue asking questions to refine your content.</p>';
+  const extra = `<div class="field">
+    <label>Content type</label>
+    <select id="kind">
+      <option>Blog post</option>
+      <option>Email</option>
+      <option>Social media caption</option>
+      <option>Product description</option>
+      <option>Rewrite and improve</option>
+      <option>Video script</option>
+    </select>
+  </div>`;
 
-  renderConversation('writer');
-
-  $('#go').onclick = async () => {
-    const v = $('#input').value.trim();
-    if (!v) return toast('Please enter some text');
-
-    const btn = $('#go');
-    btn.disabled = true;
-    btn.textContent = 'Creating…';
-
-    try {
-      const prompt = $('#kind').value + '\n' + v;
-      const messages = getRecentMessages('writer', prompt);
-      const answer = await api('writer', prompt, messages);
-
-      conversationState.writer.push(
-        { role: 'user', content: prompt },
-        { role: 'assistant', content: answer }
-      );
-
-      renderConversation('writer');
-      $('#input').value = '';
-    } catch (e) {
-      toast(e.message);
-    } finally {
-      btn.disabled = false;
-      btn.textContent = 'Send message';
-    }
-  };
-
-  $('#newchat').onclick = () => {
-    conversationState.writer = [];
-    $('#out').textContent = '';
-    $('#input').value = '';
-    toast('New chat started');
-  };
-
-  $('#copy').onclick = () => copyOut();
+  cloudChatLayout(
+    'Topic and instructions',
+    'Describe your topic, audience, tone and key points…',
+    'write',
+    extra
+  );
 }
 
 function translator() {
@@ -365,12 +589,14 @@ function translator() {
     if (!text) return toast('Enter text to translate');
 
     $('#go').disabled = true;
+
     try {
       const d = await callApi('translate', {
         prompt: text,
         targetLanguage: $('#lang').value,
         sourceLanguage: 'auto-detect'
       });
+
       $('#out').textContent = d.result || 'No translation returned.';
     } catch (e) {
       $('#out').textContent = e.message;
@@ -474,6 +700,7 @@ function video() {
     if (!v) return toast('Describe your video idea');
 
     $('#go').disabled = true;
+
     try {
       $('#out').textContent = await api(
         'video',
@@ -538,6 +765,38 @@ function pdf() {
     result() +
     '<p class="hint">PDF text extraction uses PDF.js. Scanned image-only PDFs need OCR, which is not included.</p>';
 
+  $('#extract').onclick = async () => {
+    const f = $('#file').files[0];
+    if (!f) return toast('Choose a PDF first');
+
+    try {
+      const buf = await f.arrayBuffer();
+      const pdf = await pdfjsLib.getDocument({ data: buf }).promise;
+      let text = '';
+
+      for (let i = 1; i <= pdf.numPages; i++) {
+        const page = await pdf.getPage(i);
+        const content = await page.getTextContent();
+        text += content.items.map(x => x.str).join(' ') + '\n';
+      }
+
+      $('#out').textContent = text || 'No selectable text found.';
+      window.pdfText = text;
+    } catch (e) {
+      $('#out').textContent = 'PDF extraction failed: ' + e.message;
+    }
+  };
+
+  $('#sum').onclick = async () => {
+    if (!window.pdfText) return toast('Extract PDF text first');
+
+    try {
+      $('#out').textContent = await api('summarize', window.pdfText);
+    } catch (e) {
+      $('#out').textContent = e.message;
+    }
+  };
+}
   $('#extract').onclick = async () => {
     const f = $('#file').files[0];
     if (!f) return toast('Choose a PDF first');
